@@ -1,0 +1,55 @@
+{
+  "datasets": [
+    {
+      "accession": "GSE136103",
+      "stage_band": "fibrosis",
+      "raw_support": "SRA",
+      "primary_raw_accession": "SRP218975",
+      "role": "training_early_stage",
+      "target_conditions": ["healthy", "cirrhotic"]
+    },
+    {
+      "accession": "GSE186343",
+      "stage_band": "inflammation",
+      "raw_support": "SRA_plus_raw_h5",
+      "primary_raw_accession": "PRJNA773427",
+      "role": "training_early_stage",
+      "target_conditions": ["HBV_inflammation"]
+    },
+    {
+      "accession": "GSE156625",
+      "stage_band": "tumor",
+      "raw_support": "SRA",
+      "primary_raw_accession": "SRP278381",
+      "role": "training_late_stage",
+      "target_conditions": ["healthy", "tumor"]
+    },
+    {
+      "accession": "GSE149614",
+      "stage_band": "tumor",
+      "raw_support": "processed_only",
+      "primary_raw_accession": "EGAS00001004468",
+      "role": "validation_only",
+      "target_conditions": ["tumor", "adjacent"]
+    }
+  ],
+  "major_cell_types": [
+    "Hepatocyte",
+    "Myeloid",
+    "Stromal",
+    "Endothelial",
+    "TNKcell",
+    "Bcell"
+  ],
+  "initial_quantity_definition": {
+    "name": "healthy_reference_similarity",
+    "description": "Similarity to the healthy or least-remodeled donor centroid within each cell type."
+  },
+  "strict_network_defaults": {
+    "edge_min_delta_r2": 0.35,
+    "edge_max_p": 0.05,
+    "min_edge_donors": 7,
+    "require_recurrent": true,
+    "permutations": 200
+  }
+}

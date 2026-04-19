@@ -1,0 +1,5 @@
+accession	stage_band	theme	raw_support	primary_raw_accession	recommended_role	notes
+GSE136103	fibrosis	healthy_vs_cirrhosis	SRA	SRP218975	training_early_stage	Human healthy and cirrhotic liver with donor structure
+GSE186343	inflammation	chronic_HBV_progression	SRA_plus_raw_h5	SRP342568	training_early_stage	Liver inflammation progression with six HBV biopsy donors
+GSE156625	tumor	healthy_plus_HCC	SRA	SRP278381	training_late_stage	HCC plus healthy liver; large tumor-stage ecosystem
+GSE149614	tumor	HCC_multisite	processed_only	EGAS00001004468	validation_only	Strong HCC atlas but raw data not directly open in GEO

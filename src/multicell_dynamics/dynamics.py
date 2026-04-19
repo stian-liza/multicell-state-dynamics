@@ -5,6 +5,16 @@ from dataclasses import dataclass
 import numpy as np
 
 
+def velocity_r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    residual = np.sum((y_true - y_pred) ** 2)
+    total = np.sum((y_true - y_true.mean(axis=0, keepdims=True)) ** 2)
+    return float(1.0 - residual / total) if total > 0 else 0.0
+
+
+def velocity_sign_agreement(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    return float(np.mean(np.sign(y_pred) == np.sign(y_true)))
+
+
 @dataclass
 class SparseDynamicsModel:
     alpha: float
@@ -67,10 +77,7 @@ def fit_population_dynamics(
     weights[np.abs(weights) < alpha] = 0.0
     intercept = module_velocity.mean(axis=0) - design.mean(axis=0) @ weights.T
     prediction = design @ weights.T + intercept
-
-    residual = np.sum((module_velocity - prediction) ** 2)
-    total = np.sum((module_velocity - module_velocity.mean(axis=0, keepdims=True)) ** 2)
-    score = float(1.0 - residual / total) if total > 0 else 0.0
+    score = velocity_r2_score(module_velocity, prediction)
 
     n_modules = module_activity.shape[1]
     n_states = state_embedding.shape[1]

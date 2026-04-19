@@ -6,3 +6,11 @@ dist/
 build/
 *.egg-info/
 results/
+data/raw/
+data/interim/
+data/derived/
+*.h5ad
+*.loom
+*.bam
+*.bai
+*.fastq.gz

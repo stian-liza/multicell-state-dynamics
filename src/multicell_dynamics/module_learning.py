@@ -12,6 +12,24 @@ class ModuleRepresentation:
     reconstruction_error: float
 
 
+def top_genes_per_module(
+    module_weights: np.ndarray,
+    gene_names: np.ndarray,
+    top_k: int = 10,
+) -> list[list[tuple[str, float]]]:
+    if module_weights.ndim != 2:
+        raise ValueError("module_weights must be a 2D array")
+    if len(gene_names) != module_weights.shape[0]:
+        raise ValueError("gene_names length must match number of genes")
+
+    top: list[list[tuple[str, float]]] = []
+    for module_idx in range(module_weights.shape[1]):
+        weights = module_weights[:, module_idx]
+        order = np.argsort(weights)[::-1][: min(top_k, len(weights))]
+        top.append([(str(gene_names[idx]), float(weights[idx])) for idx in order])
+    return top
+
+
 def fit_module_representation(
     x: np.ndarray,
     n_modules: int,

@@ -1,0 +1,98 @@
+<svg width="1800" height="1200" viewBox="0 0 1800 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fcfbf8"/>
+      <stop offset="100%" stop-color="#f2f6f5"/>
+    </linearGradient>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0f1720" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow2" markerWidth="14" markerHeight="14" refX="11" refY="5" orient="auto">
+      <path d="M0,0 L11,5 L0,10 Z" fill="#687986"/>
+    </marker>
+    <style>
+      .title { font: 700 52px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #16222f; }
+      .subtitle { font: 400 24px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #596a77; }
+      .nodeTitle { font: 700 30px 'PingFang SC','Microsoft YaHei',sans-serif; }
+      .nodeBody { font: 400 21px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #32424f; }
+      .section { font: 700 28px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #22313f; }
+      .body { font: 400 21px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #364654; }
+      .small { font: 400 18px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #667784; }
+      .stat { font: 600 18px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #253543; }
+      .stage { font: 700 18px 'PingFang SC','Microsoft YaHei',sans-serif; fill: #5f707d; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1200" fill="url(#bg2)"/>
+
+  <text x="90" y="95" class="title">项目 2：关键结论链条图</text>
+  <text x="90" y="140" class="subtitle">严格方向标准下，当前更稳定的一条候选链：内皮炎症激活 → 髓系干扰素应答 → 炎症型成纤维细胞 → 肝细胞恶性样程序</text>
+
+  <g filter="url(#shadow2)">
+    <rect x="70" y="205" width="1660" height="485" rx="34" ry="34" fill="#ffffff" stroke="#dde4e8" stroke-width="2"/>
+  </g>
+
+  <text x="110" y="258" class="section">一、最值得讲的一条候选方向链</text>
+
+  <rect x="105" y="320" width="320" height="245" rx="30" ry="30" fill="#e7eef6" stroke="#8ca7c1" stroke-width="2.5"/>
+  <rect x="510" y="320" width="320" height="245" rx="30" ry="30" fill="#e9f1e4" stroke="#98ac83" stroke-width="2.5"/>
+  <rect x="915" y="320" width="320" height="245" rx="30" ry="30" fill="#f7e7d7" stroke="#cf9756" stroke-width="2.5"/>
+  <rect x="1320" y="320" width="320" height="245" rx="30" ry="30" fill="#eee2f1" stroke="#a88ab8" stroke-width="2.5"/>
+
+  <text x="265" y="375" text-anchor="middle" class="nodeTitle" fill="#294562">炎症性内皮</text>
+  <text x="265" y="420" text-anchor="middle" class="nodeBody">Endothelial</text>
+  <text x="265" y="452" text-anchor="middle" class="nodeBody">inflammatory_endothelial</text>
+  <text x="265" y="505" text-anchor="middle" class="small">VCAM1 / ICAM1 / SELE / CCL2 / CXCL8</text>
+
+  <text x="670" y="375" text-anchor="middle" class="nodeTitle" fill="#355235">干扰素应答型髓系</text>
+  <text x="670" y="420" text-anchor="middle" class="nodeBody">Myeloid</text>
+  <text x="670" y="452" text-anchor="middle" class="nodeBody">interferon_myeloid</text>
+  <text x="670" y="505" text-anchor="middle" class="small">ISG15 / IFIT1 / IFIT3 / MX1 / OAS1</text>
+
+  <text x="1075" y="375" text-anchor="middle" class="nodeTitle" fill="#74431b">炎症型成纤维细胞</text>
+  <text x="1075" y="420" text-anchor="middle" class="nodeBody">Stromal</text>
+  <text x="1075" y="452" text-anchor="middle" class="nodeBody">inflammatory_caf</text>
+  <text x="1075" y="505" text-anchor="middle" class="small">IL6 / CXCL12 / CCL2 / ICAM1 / VCAM1</text>
+
+  <text x="1480" y="375" text-anchor="middle" class="nodeTitle" fill="#5b3568">肝细胞恶性样程序</text>
+  <text x="1480" y="420" text-anchor="middle" class="nodeBody">Hepatocyte</text>
+  <text x="1480" y="452" text-anchor="middle" class="nodeBody">malignant_like</text>
+  <text x="1480" y="505" text-anchor="middle" class="small">GPC3 / EPCAM / KRT19 / AFP / MDK</text>
+
+  <path d="M425 442 C455 442, 475 442, 510 442" fill="none" stroke="#687986" stroke-width="5" marker-end="url(#arrow2)"/>
+  <path d="M830 442 C860 442, 880 442, 915 442" fill="none" stroke="#687986" stroke-width="5" marker-end="url(#arrow2)"/>
+  <path d="M1235 442 C1265 442, 1285 442, 1320 442" fill="none" stroke="#687986" stroke-width="5" marker-end="url(#arrow2)"/>
+
+  <text x="468" y="300" text-anchor="middle" class="stage">low_steatosis</text>
+  <text x="873" y="300" text-anchor="middle" class="stage">Tumor</text>
+  <text x="1278" y="300" text-anchor="middle" class="stage">Tumor</text>
+
+  <rect x="420" y="588" width="95" height="82" rx="18" fill="#f4f7f8"/>
+  <rect x="825" y="588" width="95" height="82" rx="18" fill="#f4f7f8"/>
+  <rect x="1230" y="588" width="95" height="82" rx="18" fill="#f4f7f8"/>
+
+  <text x="467" y="617" text-anchor="middle" class="stat">ΔR² 1.3024</text>
+  <text x="467" y="642" text-anchor="middle" class="stat">p 0.0495</text>
+  <text x="467" y="664" text-anchor="middle" class="small">reverse 0.4851</text>
+
+  <text x="872" y="617" text-anchor="middle" class="stat">ΔR² 0.3452</text>
+  <text x="872" y="642" text-anchor="middle" class="stat">p 0.0495</text>
+  <text x="872" y="664" text-anchor="middle" class="small">reverse 0.9604</text>
+
+  <text x="1277" y="617" text-anchor="middle" class="stat">ΔR² 0.8557</text>
+  <text x="1277" y="642" text-anchor="middle" class="stat">p 0.0099</text>
+  <text x="1277" y="664" text-anchor="middle" class="small">reverse 0.8515</text>
+
+  <g filter="url(#shadow2)">
+    <rect x="70" y="755" width="1660" height="330" rx="34" ry="34" fill="#ffffff" stroke="#dde4e8" stroke-width="2"/>
+  </g>
+
+  <text x="110" y="812" class="section">二、这条链在生物学上怎么解释</text>
+  <text x="110" y="868" class="body">1. 这不是“同一阶段同时发生”的瞬时通路，而是一个跨阶段候选演化结构。</text>
+  <text x="110" y="910" class="body">2. 早期更像是炎症性内皮与髓系干扰素应答的耦合；肿瘤阶段更明显地收敛到 inflammatory CAF。</text>
+  <text x="110" y="952" class="body">3. 最终落点不是单个基因，而是 hepatocyte malignant-like program 的加速，更接近机制层级解释。</text>
+  <text x="110" y="1018" class="small">边界：这里的“速度”是伪时间构造的近似动态量，因此应理解为有方向感的候选结构，而不是严格因果证明。</text>
+
+  <rect x="110" y="1035" width="1510" height="38" rx="19" fill="#f2f5f7"/>
+  <text x="865" y="1060" text-anchor="middle" class="stat">Take-home message：肝细胞恶性样程序更像是前序微环境重塑逐步推动出来的，而不是孤立发生的</text>
+</svg>

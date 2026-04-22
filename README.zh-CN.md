@@ -1,204 +1,146 @@
 # Multicell State Dynamics
 
-这是一个把博士研究计划收缩成可运行原型的 GitHub 项目，用来展示“多细胞群体耦合的粗粒化状态动力学建模”这一方向的最小可行闭环。
+这是一个围绕**多细胞状态转变粗粒化建模**的研究原型仓库，目标是从单细胞数据出发，把分析从静态关联推进到更有方向感的模块级比较。
 
-## 这个仓库在做什么
+英文版见：[README.md](README.md)
 
-第一版只解决四件事：
+## 仓库现在在做什么
 
-- 从高维细胞特征中提取可解释的功能模块
-- 在模块层拟合局部速度动力学
-- 引入跨细胞群体的外部耦合输入
-- 输出稀疏、可解释的候选驱动边和关键模块
+这个仓库当前的核心问题是：
 
-这样做的目的，是先证明“模块级动力学建模”本身有解释价值，再逐步扩展到空间组学、遗传学先验、文献证据和干预设计。
+> 能否从横断面单细胞数据中，提取出更接近“状态变化结构”的信息，并据此构建可解释的多细胞方向性原型？
 
-## 为什么说原计划可行
+目前的代码主线分为三个层次：
 
-原计划的科学问题是成立的，真正需要控制的是范围。
+1. **合成数据 demo**  
+   验证模块学习和稀疏动力学拟合能够端到端跑通。
+2. **小规模真实数据原型（`GSE185477`）**  
+   测试伪时间局部方向信号能否支持真实数据上的模块级动力学建模。
+3. **分阶段肝病原型（`SCP2154`）**  
+   在 donor-aware 的前提下，比较 `模块状态 -> 模块速度` 的双向关系，并筛选更稳定的候选方向边。
 
-适合博士前期先做的部分：
+这个仓库的目标不是直接证明因果，而是建立一个可信的建模闭环，用于生成可解释、可继续验证的候选机制结构。
 
-- 单疾病场景
-- 单个关键状态转变
-- 模块级 coarse-grained 动力学
-- 局部速度监督而不是长期外推
-- 稀疏线性模型作为第一版基线
+## 当前主线：SCP2154 速度耦合原型
 
-不适合在第一年同时展开的部分：
+当前最重要的版本是 **SCP2154 stagewise velocity-coupling prototype**。
 
-- 空间组学、遗传学、文献先验、结构生物学、候选分子设计全部并行
-- 直接做很强的因果或干预结论
-- 在没有稳定动力学闭环前就进入复杂证据融合
+它基于按疾病阶段分层的肝病单细胞数据，比较：
 
-## 目录说明
+- 一个细胞群的模块状态，能否预测另一个细胞群的模块速度
+- 这一方向是否强于反方向
+- 在 donor-held-out 和 permutation 过滤下，哪些边还能保留下来
+
+当前实现包含：
+
+- 固定、可解释的细胞类型功能模块
+- 用伪时间邻域差分近似局部模块速度
+- 在每个 disease stage 内按 donor 交集配对
+- 双向方向性比较：
+  - `A score -> dB/dt`
+  - `B score -> dA/dt`
+- 进一步组织成跨阶段的候选机制链
+
+项目摘要：
+
+- [docs/project2_velocity_coupling_summary.zh-CN.md](docs/project2_velocity_coupling_summary.zh-CN.md)
+
+面试版讲稿摘要：
+
+- [docs/scp2154_velocity_coupling_interview_summary.zh-CN.md](docs/scp2154_velocity_coupling_interview_summary.zh-CN.md)
+
+已追踪的正式图：
+
+- 流程图：[docs/assets/project2/workflow_figure.svg](docs/assets/project2/workflow_figure.svg)
+- 结果链条图：[docs/assets/project2/conclusion_chain_figure.svg](docs/assets/project2/conclusion_chain_figure.svg)
+
+## 代表性结果
+
+在更严格的单向标准下，当前原型保留了一条候选方向链：
+
+`炎症性内皮 -> 干扰素应答型髓系 -> 炎症型成纤维细胞 -> 肝细胞恶性样程序`
+
+这条链应当理解为**候选方向结构**，而不是严格因果证明。
+
+更稳妥的解释是：肝细胞恶性样程序的加速，更可能与前序微环境重塑有关，而不是孤立发生。
+
+## 目录结构
 
 ```text
 multicell-state-dynamics/
-├── docs/                  研究路线与阶段规划
-├── scripts/               可直接运行的 demo 脚本
-├── src/multicell_dynamics/ 核心建模代码
-├── tests/                 基础测试
-├── README.md              英文说明
-├── README.zh-CN.md        中文说明
-├── LICENSE
-└── pyproject.toml
+├── docs/                         说明文档、项目摘要和正式图
+├── scripts/                      可直接运行的原型脚本
+├── src/multicell_dynamics/       核心建模代码
+├── tests/                        单元测试
+├── README.md
+├── README.zh-CN.md
+├── pyproject.toml
+└── LICENSE
 ```
 
-## 运行方式
+## 关键脚本
 
-如果你的终端里启用了 Conda `base`，推荐直接使用项目内的 `.venv`：
+### 1. 合成数据 demo
+
+```bash
+python scripts/run_synthetic_demo.py
+```
+
+### 2. 真实数据 macrophage 原型（`GSE185477`）
+
+```bash
+python scripts/run_gse185477_demo.py
+```
+
+### 3. SCP2154 phenotype baseline
+
+```bash
+python scripts/run_scp2154_phenotype_baseline.py \
+  --metadata data/raw/scp2154/metadata.tsv.gz \
+  --matrix data/raw/scp2154/counts.tsv.gz
+```
+
+### 4. SCP2154 stagewise velocity coupling
+
+```bash
+python scripts/run_scp2154_stagewise_velocity_coupling.py
+```
+
+## 快速开始
+
+```bash
+cd "/Users/einstian/Documents/New project/multicell-state-dynamics"
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+python -m unittest discover -s tests
+```
+
+如果你的终端里已经启用了其他 Python 环境，可以使用更稳妥的本地方式：
 
 ```bash
 cd "/Users/einstian/Documents/New project/multicell-state-dynamics"
 python3 -m venv --system-site-packages .venv
 ./.venv/bin/python -m pip install -e . --no-build-isolation
-./.venv/bin/python scripts/run_synthetic_demo.py
 ./.venv/bin/python -m unittest discover -s tests
 ```
 
-## 下一步怎么扩展
+## 结果解释边界
 
-- 换成一个真实疾病数据集
-- 加入 RNA velocity 或伪时序方向监督
-- 按细胞群体分别估计动力学模型
-- 引入空间邻域图构建跨细胞耦合项
-- 把文献和数据库证据作为独立排序层接到模型之后
+这个仓库对结论边界是有意识控制的：
 
-## 当前主线：stromal 影响 hepatocyte 恶性状态重塑
+- 这里使用的速度信号**不是 RNA velocity**
+- 这里的跨阶段链条**不是同一批 donor 的纵向追踪证明**
+- 保留下来的边更适合解释为**候选方向关系**
 
-当前最值得推进的真实数据方向不是“用 stromal 判断癌症”，而是：
+这也是整个仓库当前的设计原则。
 
-> CAF-like stromal activation 是否能够预测 hepatocyte/tumor-cell malignant-state remodeling？
+## 相关文档
 
-设计文档见：
+- phenotype baseline: [docs/scp2154_phenotype_baseline.md](docs/scp2154_phenotype_baseline.md)
+- 过程/代码说明： [docs/prototype_process_code_guide.zh-CN.md](docs/prototype_process_code_guide.zh-CN.md)
+- 风险评估： [docs/pre_experiment_assessment_and_risk_table.zh-CN.md](docs/pre_experiment_assessment_and_risk_table.zh-CN.md)
 
-```text
-docs/stromal_hepatocyte_malignant_remodeling_plan.zh-CN.md
-docs/stagewise_coupling_experiment_design.zh-CN.md
-```
+## License
 
-当前 SCP2154 原型已经输出：
-
-```text
-results/scp2154_stromal_to_hepatocyte/module_reference.tsv
-results/scp2154_stromal_to_hepatocyte/coupling_summary.tsv
-results/scp2154_stromal_to_hepatocyte/coupling_pairs.tsv
-results/scp2154_sender_comparison/sender_summary.tsv
-results/scp2154_sender_comparison/coupling_pairs.tsv
-results/scp2154_coupling_permutation/observed_pair.tsv
-results/scp2154_coupling_permutation/null_distribution.tsv
-results/scp2154_leave_one_donor_out/fold_results.tsv
-results/scp2154_leave_one_donor_out/summary.tsv
-results/scp2154_pretumor_coupling/condition_summary.tsv
-results/scp2154_pretumor_coupling/coupling_pairs.tsv
-results/scp2154_static_vs_dynamic/comparison_pairs.tsv
-results/scp2154_static_vs_dynamic/summary.tsv
-results/scp2154_directionality_test/summary.tsv
-results/scp2154_directionality_test/direction_details.tsv
-results/scp2154_bidirectional_key_tests/bidirectional_pairs.tsv
-results/scp2154_bidirectional_key_tests/directed_edges.tsv
-results/scp2154_bidirectional_key_tests/summary.tsv
-results/scp2154_bidirectional_key_tests/module_reference.tsv
-results/scp2154_fixed_signature_tumor_validation/summary.tsv
-results/scp2154_fixed_signature_tumor_validation/signature_pair_tests.tsv
-results/scp2154_fixed_signature_tumor_validation/bidirectional_signature_pairs.tsv
-results/scp2154_fixed_signature_tumor_validation/donor_signature_table.tsv
-results/scp2154_coupling_driver_scan/driver_scan.tsv
-results/scp2154_coupling_driver_scan/bidirectional_driver_scan.tsv
-results/scp2154_coupling_driver_scan/driver_donor_table.tsv
-results/scp2154_coupling_driver_scan/summary.tsv
-```
-
-初步结果提示 `TAGLN/ACTA2/MYL9/IGFBP7/CALD1/TPM2` 这一 CAF-like stromal 模块与 hepatocyte tumor-up 模块变化方向存在可检验的耦合关系。
-
-多 sender 比较脚本：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_sender_comparison.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-Permutation control：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_coupling_permutation.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-Leave-one-donor-out 稳健性验证：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_leave_one_donor_out.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-早期/背景肝病验证：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_pretumor_coupling.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-关键阶段双向测试：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_bidirectional_key_tests.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-Tumor 固定 signature 验证：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_fixed_signature_tumor_validation.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-Tumor coupling driver scan：
-
-```bash
-./.venv/bin/python scripts/run_scp2154_coupling_driver_scan.py \
-  --metadata "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/metadata.tsv" \
-  --matrix "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/matrix.mtx.gz" \
-  --features "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/features.tsv.gz" \
-  --barcodes "/Users/einstian/study/SYSU/xiong/pARDH_liver/eclip/profile/barcodes.tsv.gz"
-```
-
-## GSE185477 真实数据原型
-
-当前仓库已经补上了一个 `velocity-free` 的真实数据入口，思路是：
-
-- 先用 `C41` 样本
-- 先只看 `Macrophage`
-- 用 `NonInfMac -> InfMac` 作为方向化伪时序
-- 用局部邻域差分近似模块变化方向
-- 再拟合模块级稀疏动力学
-
-运行顺序：
-
-```bash
-./.venv/bin/python scripts/inspect_gse185477.py
-./.venv/bin/python scripts/run_gse185477_demo.py
-```
-
-这一步的定位不是严格意义上的 RNA velocity，而是一个适合 Mac 本地先跑通的第一阶段真实数据闭环。
-
-真实数据上的指标通常会明显低于 synthetic demo，这是正常的。这里追求的是“流程成立、信号存在、结果可解释”，而不是像合成数据那样接近完美拟合。
+MIT

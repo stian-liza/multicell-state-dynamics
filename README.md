@@ -1,63 +1,109 @@
 # Multicell State Dynamics
 
-An MVP research repository for coarse-grained multicellular state evolution modeling.
+A research prototype for coarse-grained modeling of multicellular state transitions from single-cell data.
 
-Chinese overview: [README.zh-CN.md](README.zh-CN.md)
+Chinese version: [README.zh-CN.md](README.zh-CN.md)
 
-This project translates a PhD-style research plan into a runnable GitHub prototype. It focuses on the smallest credible loop:
+## Overview
 
-- define interpretable module variables from high-dimensional cell features
-- fit local module-velocity dynamics
-- add cross-population coupling terms
-- rank candidate driver modules from a sparse linear dynamical system
+This repository explores a simple but ambitious question:
 
-## Why This Repo Exists
+> Can we move from static single-cell association analysis toward a directional, module-level view of multicellular state change?
 
-The full research plan is scientifically strong, but too broad to execute all at once. The practical strategy is:
+The current codebase focuses on three increasingly realistic steps:
 
-1. Start with one disease context.
-2. Focus on one major cell population and one transition of interest.
-3. Build a module-level dynamical model before adding heavy evidence integration.
-4. Treat literature and database reasoning as a later ranking layer, not the core model.
+1. **Synthetic dynamics demo**  
+   Verify that module learning and sparse dynamics fitting work end to end.
+2. **Small real-data prototype (`GSE185477`)**  
+   Test whether pseudotime-derived local direction signals can support module-level dynamics on real single-cell data.
+3. **Stage-resolved liver disease prototype (`SCP2154`)**  
+   Use disease-stage-stratified single-cell data to compare `module state -> module velocity` in a donor-held-out, bidirectional framework.
 
-This repository implements that first closed loop.
+The goal is not to claim causality. The goal is to build a credible modeling loop that can generate interpretable, testable hypotheses about state transitions and cross-cell coupling.
 
-## Feasibility Assessment
+## Current Main Prototype
 
-The plan is feasible if it is scoped as an incremental program rather than a fully parallel three-stage system.
+The current main line of this repository is the **SCP2154 stagewise velocity-coupling prototype**.
 
-What is realistic:
+It uses liver single-cell data stratified by disease stage and asks whether:
 
-- module-level dynamics instead of gene-level mechanistic ODEs
-- local velocity supervision instead of long-horizon forecasting
-- sparse linear or weakly nonlinear coupling as the first model family
-- one disease and one transition as the first case study
+- one cell population's module state can predict another population's module velocity
+- that directional relationship is stronger than the reverse direction
+- the signal survives donor-held-out evaluation and permutation-based filtering
 
-What is risky if attempted too early:
+The current implementation includes:
 
-- simultaneous integration of scRNA, spatial, genetics, literature priors, structure, and drug design
-- strong causal claims from trajectory reconstruction alone
-- full intervention design before the dynamical model is stable
+- fixed, interpretable cell-type-specific module signatures
+- pseudotime-neighborhood differences as a local velocity proxy
+- donor-aware pairing within each disease stage
+- bidirectional testing:
+  - `A score -> dB/dt`
+  - `B score -> dA/dt`
+- candidate stage-linked directional chains
 
-## Repository Layout
+Project summary:
+
+- [docs/project2_velocity_coupling_summary.zh-CN.md](docs/project2_velocity_coupling_summary.zh-CN.md)
+
+Interview-style explanation:
+
+- [docs/scp2154_velocity_coupling_interview_summary.zh-CN.md](docs/scp2154_velocity_coupling_interview_summary.zh-CN.md)
+
+Tracked figure assets:
+
+- workflow: [docs/assets/project2/workflow_figure.svg](docs/assets/project2/workflow_figure.svg)
+- conclusion chain: [docs/assets/project2/conclusion_chain_figure.svg](docs/assets/project2/conclusion_chain_figure.svg)
+
+## Representative Result
+
+Under a stricter single-direction criterion, the current prototype retains a candidate chain:
+
+`Endothelial.inflammatory_endothelial -> Myeloid.interferon_myeloid -> Stromal.inflammatory_caf -> Hepatocyte.malignant_like`
+
+This should be interpreted as a **candidate directional structure**, not a causal proof.
+
+In plain terms, the current model suggests that terminal hepatocyte malignant-like acceleration may be linked to earlier microenvironment remodeling rather than appearing in isolation.
+
+## Repository Structure
 
 ```text
 multicell-state-dynamics/
-├── docs/
-│   └── roadmap.md
-├── scripts/
-│   └── run_synthetic_demo.py
-├── src/
-│   └── multicell_dynamics/
-│       ├── __init__.py
-│       ├── coupling.py
-│       ├── dynamics.py
-│       ├── module_learning.py
-│       └── synthetic.py
-├── tests/
-│   └── test_synthetic_pipeline.py
-├── .gitignore
-└── pyproject.toml
+├── docs/                         notes, summaries, and tracked figure assets
+├── scripts/                      runnable prototypes and analysis scripts
+├── src/multicell_dynamics/       core modeling utilities
+├── tests/                        unit tests
+├── README.md
+├── README.zh-CN.md
+├── pyproject.toml
+└── LICENSE
+```
+
+## Key Scripts
+
+### 1. Synthetic demo
+
+```bash
+python scripts/run_synthetic_demo.py
+```
+
+### 2. Real-data macrophage prototype (`GSE185477`)
+
+```bash
+python scripts/run_gse185477_demo.py
+```
+
+### 3. SCP2154 phenotype baseline
+
+```bash
+python scripts/run_scp2154_phenotype_baseline.py \
+  --metadata data/raw/scp2154/metadata.tsv.gz \
+  --matrix data/raw/scp2154/counts.tsv.gz
+```
+
+### 4. SCP2154 stagewise velocity coupling
+
+```bash
+python scripts/run_scp2154_stagewise_velocity_coupling.py
 ```
 
 ## Quick Start
@@ -67,111 +113,33 @@ cd "/Users/einstian/Documents/New project/multicell-state-dynamics"
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
-python scripts/run_synthetic_demo.py
 python -m unittest discover -s tests
 ```
 
-If your shell is currently inside another Python environment such as Conda `base`, the most reliable option is:
+If you are already inside another Python environment and want a more robust local setup:
 
 ```bash
 cd "/Users/einstian/Documents/New project/multicell-state-dynamics"
 python3 -m venv --system-site-packages .venv
 ./.venv/bin/python -m pip install -e . --no-build-isolation
-./.venv/bin/python scripts/run_synthetic_demo.py
 ./.venv/bin/python -m unittest discover -s tests
 ```
 
-The demo generates synthetic cell states, learns module variables with NMF, fits sparse dynamics, and prints the highest-magnitude inferred edges.
+## Notes on Interpretation
 
-## Real Data Prototype: GSE185477
+This repository is deliberately conservative about claims.
 
-This repository now includes a first-pass real-data prototype built around `GSE185477`, using:
+- The velocity signal used here is **not RNA velocity**.
+- The stagewise chains are **not longitudinal proof** across the same donors.
+- The retained edges are best understood as **candidate directional hypotheses**.
 
-- one sample: `C41`
-- one cell group: `Macrophage`
-- one direction proxy: `pseudotime` plus local neighborhood differences
+That boundary is part of the design philosophy of the repo.
 
-This is intentionally a `velocity-free` first pass. It does not claim RNA velocity. Instead, it estimates a local direction field from the state embedding and uses that as a weak supervision target for coarse-grained dynamics.
+## Related Notes
 
-### Downloaded files expected locally
-
-```text
-data/raw/gse185477/
-├── GSE185477_Final_Metadata.txt.gz
-└── GSE185477_GSM3178784_C41_SC_raw_counts.zip
-```
-
-### Inspect metadata
-
-```bash
-./.venv/bin/python scripts/inspect_gse185477.py
-```
-
-### Run the real-data demo
-
-```bash
-./.venv/bin/python scripts/run_gse185477_demo.py
-```
-
-The real-data demo:
-
-- selects `C41` macrophage cells from metadata
-- separates `InfMac` and `NonInfMac`
-- normalizes counts and keeps highly variable genes
-- learns module variables
-- builds a PCA state embedding
-- orients pseudotime so `NonInfMac -> InfMac`
-- estimates local module-direction targets from neighborhood differences
-- fits a sparse module-level dynamics model
-
-Expected behavior on real data:
-
-- metrics will be much lower than the synthetic demo
-- this is normal and desirable
-- the goal is to establish a credible real-data first pass, not an artificially perfect fit
-
-## SCP2154 Liver Phenotype Baseline
-
-The SCP2154 atlas can be used as a conservative phenotype classification baseline. The first pass should not claim disease progression or causality. It should only test whether liver phenotypes are separable under donor-held-out evaluation.
-
-See [docs/scp2154_phenotype_baseline.md](docs/scp2154_phenotype_baseline.md).
-
-```bash
-python scripts/run_scp2154_phenotype_baseline.py \
-  --metadata data/raw/scp2154/metadata.tsv.gz \
-  --matrix data/raw/scp2154/counts.tsv.gz
-```
-
-## Cloud-Scale Next Step
-
-The next planned expansion is a cloud-scale liver disease progression program with:
-
-- raw-read or raw spliced/unspliced capable datasets
-- velocity-aware preprocessing
-- donor-aware multi-dataset integration
-- shared module/state variables across liver disease stages
-- hepatocyte-centered strict driver-chain analysis
-
-Design notes:
-
-- [docs/liver_velocity_cloud_plan.md](docs/liver_velocity_cloud_plan.md)
-- [docs/liver_velocity_dataset_manifest.tsv](docs/liver_velocity_dataset_manifest.tsv)
-
-## Suggested Next Steps
-
-- replace the synthetic generator with a small real benchmark dataset
-- add RNA velocity or pseudotime-derived local direction supervision
-- split by cell population and estimate one model per population
-- add spatial neighbor weights for cross-cell coupling
-- build a separate evidence-ranking layer for literature and genetics
-
-## Good First Real Dataset
-
-For a first real case, use one disease dataset with:
-
-- a clear malignant-to-resistant or inflamed-to-exhausted transition
-- enough cells per major population
-- optional spatial coordinates, but not required for the first pass
+- phenotype baseline: [docs/scp2154_phenotype_baseline.md](docs/scp2154_phenotype_baseline.md)
+- process/code guide: [docs/prototype_process_code_guide.zh-CN.md](docs/prototype_process_code_guide.zh-CN.md)
+- risk table: [docs/pre_experiment_assessment_and_risk_table.zh-CN.md](docs/pre_experiment_assessment_and_risk_table.zh-CN.md)
 
 ## License
 

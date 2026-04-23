@@ -117,6 +117,15 @@ def stage_node_tables(
     stages: list[dict],
     min_cells: int,
 ) -> tuple[list[dict], dict[str, dict[str, dict[str, float]]]]:
+    """Aggregate cell-level signature scores into donor-level stage tables.
+
+    For each node (cell_type.signature) and each stage:
+    - compute donor means in healthy cells
+    - compute donor means in condition cells for that stage
+    - store stage delta = mean(condition donors) - mean(healthy donors)
+
+    These donor means are the basic unit for the later directional tests.
+    """
     node_records = []
     stage_node_values: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
     for node_id, values in scores_by_node.items():
@@ -154,6 +163,7 @@ def stage_node_tables(
 
 
 def first_altered_stage(node_records: list[dict], delta_threshold: float) -> dict[str, dict]:
+    """Assign the earliest stage where a node changes beyond |delta| threshold."""
     out = {}
     for record in sorted(node_records, key=lambda item: (item["stage_order"], -item["abs_delta"])):
         if record["abs_delta"] < delta_threshold:
@@ -177,6 +187,21 @@ def evaluate_pair(
     permutations: int,
     rng: np.random.Generator,
 ) -> dict | None:
+    """Test whether source donor scores predict target donor scores.
+
+    Input
+    - source_values: donor -> source node score
+    - target_values: donor -> target node score
+
+    Output
+    - held-out ridge metrics including loo_delta_r2
+    - permutation null summary
+
+    Formula summary
+    - Fit ridge regression y ~ x in leave-one-donor-out fashion
+    - Compare model R^2 to a baseline that predicts the training mean only
+    - loo_delta_r2 = loo_r2 - loo_baseline_r2
+    """
     donors = sorted(set(source_values) & set(target_values))
     if len(donors) < 5:
         return None
@@ -348,6 +373,7 @@ def select_stage_chain(
 
 
 def attach_stage_consistency(edge_records: list[dict]) -> None:
+    """Annotate whether the selected direction repeats across multiple stages."""
     selected_stage_map: dict[tuple[str, str], list[str]] = defaultdict(list)
     source_stage_map: dict[str, list[str]] = defaultdict(list)
     target_stage_map: dict[str, list[str]] = defaultdict(list)

@@ -61,6 +61,18 @@ def fit_celltype_representation(
     hvg: int,
     random_state: int,
 ) -> dict:
+    """Build the early cell-level representation for one cell type.
+
+    Inputs
+    - raw count matrix subset for one cell type
+    - row metadata with disease labels
+
+    Outputs
+    - module representation (M)
+    - low-dimensional state embedding (z)
+    - pseudotime
+    - local module velocity dm/dt estimated from pseudotime neighbors
+    """
     cell_to_index = {cell: idx for idx, cell in enumerate(counts.cell_barcodes)}
     idx = np.array([cell_to_index[row["NAME"]] for row in rows], dtype=int)
     matrix = counts.matrix[idx]
@@ -96,6 +108,7 @@ def patient_phenotype_module_scores(
     rows: list[dict[str, str]],
     module_activity: np.ndarray,
 ) -> dict[tuple[str, str], np.ndarray]:
+    """Average cell-level module activities to donor-by-phenotype summaries."""
     grouped: dict[tuple[str, str], list[np.ndarray]] = defaultdict(list)
     for idx, row in enumerate(rows):
         grouped[(row["donor_id"], row["indication"])].append(module_activity[idx])
@@ -106,6 +119,7 @@ def build_stromal_input(
     hep_rows: list[dict[str, str]],
     stromal_scores: dict[tuple[str, str], np.ndarray],
 ) -> np.ndarray:
+    """Broadcast donor-level stromal scores as external input to hepatocytes."""
     global_mean = np.mean(np.vstack(list(stromal_scores.values())), axis=0)
     out = np.zeros((len(hep_rows), global_mean.shape[0]), dtype=float)
     for idx, row in enumerate(hep_rows):

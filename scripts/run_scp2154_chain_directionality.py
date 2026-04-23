@@ -158,6 +158,13 @@ def evaluate_hops(
     permutations: int,
     random_state: int,
 ) -> list[dict]:
+    """Evaluate each pre-specified hop in both directions.
+
+    Each hop reports:
+    - forward_delta_r2 for source -> target
+    - reverse_delta_r2 for target -> source
+    - winner and winner_p based on the stronger held-out direction
+    """
     rng = np.random.default_rng(random_state)
     records = []
     for hop_name, stage, source, target in chain:
@@ -223,6 +230,19 @@ def evaluate_triplets(
     permutations: int,
     random_state: int,
 ) -> list[dict]:
+    """Check whether a middle node mediates a source -> target relation.
+
+    For source A, mediator B, target C:
+    - source-only model:      C ~ A
+    - mediator-only model:    C ~ B
+    - joint model:            C ~ A + B
+
+    The key reported quantity is joint_gain_over_source:
+        Delta = R2_joint - R2_source_only
+
+    A permutation p-value asks whether adding the mediator helps more than
+    expected by chance.
+    """
     rng = np.random.default_rng(random_state)
     records = []
     for triplet_name, stage, source, mediator, target in triplets:

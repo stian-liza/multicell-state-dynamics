@@ -36,6 +36,25 @@ def fit_module_representation(
     random_state: int = 0,
     max_iter: int = 800,
 ) -> ModuleRepresentation:
+    """Fit a non-negative low-rank module representation.
+
+    Inputs
+    - x: cell-by-feature matrix with shape (n_cells, n_genes_or_features)
+    - n_modules: number of latent functional programs to infer
+
+    Outputs
+    - module_activity W with shape (n_cells, n_modules)
+    - module_weights H with shape (n_features, n_modules)
+
+    Approximation
+    - After shifting x to be non-negative, solve X ~= W H^T
+    - Updates use classic multiplicative NMF rules:
+      H <- H * (W^T X) / (W^T W H)
+      W <- W * (X H^T) / (W H H^T)
+
+    This is the core "functional module" compression used by the early
+    cell-level prototype before the later fixed-signature stage-wise network.
+    """
     if x.ndim != 2:
         raise ValueError("x must be a 2D array of shape (cells, features)")
     if n_modules < 2:

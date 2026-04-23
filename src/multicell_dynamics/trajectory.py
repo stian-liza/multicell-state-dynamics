@@ -4,6 +4,7 @@ import numpy as np
 
 
 def pca_embedding(x: np.ndarray, n_components: int = 2) -> np.ndarray:
+    """Return a low-dimensional state variable z from PCA/SVD coordinates."""
     x_centered = x - x.mean(axis=0, keepdims=True)
     u, s, _ = np.linalg.svd(x_centered, full_matrices=False)
     n_components = min(n_components, u.shape[1])
@@ -11,6 +12,7 @@ def pca_embedding(x: np.ndarray, n_components: int = 2) -> np.ndarray:
 
 
 def pseudotime_from_embedding(embedding: np.ndarray, axis: int = 0) -> np.ndarray:
+    """Map one embedding axis to [0, 1] as a coarse pseudotime surrogate."""
     raw = embedding[:, axis]
     raw = raw - raw.min()
     denom = max(float(raw.max()), 1e-8)
@@ -23,6 +25,7 @@ def orient_pseudotime_by_labels(
     low_label: str,
     high_label: str,
 ) -> np.ndarray:
+    """Orient pseudotime so low_label appears earlier than high_label."""
     low_mask = labels == low_label
     high_mask = labels == high_label
     if np.any(low_mask) and np.any(high_mask):
@@ -36,6 +39,16 @@ def local_direction_from_pseudotime(
     pseudotime: np.ndarray,
     k_neighbors: int = 15,
 ) -> np.ndarray:
+    """Approximate module velocity dm/dt from forward pseudotime neighbors.
+
+    For each cell i, choose the nearest neighbors j with t_j > t_i and compute:
+
+        velocity_i = mean_j ((m_j - m_i) / (t_j - t_i))
+
+    where m is the module activity vector and t is pseudotime.
+
+    This is an empirical finite-difference surrogate, not RNA velocity.
+    """
     n_cells = len(pseudotime)
     velocity = np.zeros_like(module_activity, dtype=float)
     for idx in range(n_cells):

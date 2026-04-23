@@ -25,6 +25,7 @@ def _open_maybe_gzip(path: str | Path):
 
 
 def read_metadata_table(path: str | Path, delimiter: str = "\t", max_rows: int | None = None) -> list[dict[str, str]]:
+    """Read tabular metadata into a list of row dictionaries."""
     rows: list[dict[str, str]] = []
     with _open_maybe_gzip(path) as handle:
         reader = csv.reader(handle, delimiter=delimiter)
@@ -64,6 +65,7 @@ def _align_metadata_row(header: list[str], raw_row: list[str]) -> dict[str, str]
 
 
 def read_10x_triplet_from_zip(path: str | Path) -> CountMatrix:
+    """Read a zipped 10x-style matrix/features/barcodes bundle into memory."""
     path = Path(path)
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
@@ -132,6 +134,7 @@ def _read_mtx_from_zip(archive: zipfile.ZipFile, member_name: str) -> np.ndarray
 
 
 def select_highly_variable_genes(matrix: np.ndarray, gene_names: np.ndarray, top_k: int = 2000) -> tuple[np.ndarray, np.ndarray]:
+    """Keep genes with largest dispersion var / mean within the matrix."""
     mean = matrix.mean(axis=0)
     var = matrix.var(axis=0)
     dispersion = var / np.maximum(mean, 1e-8)
@@ -140,6 +143,11 @@ def select_highly_variable_genes(matrix: np.ndarray, gene_names: np.ndarray, top
 
 
 def log1p_library_normalize(matrix: np.ndarray, target_sum: float = 1e4) -> np.ndarray:
+    """Per-cell library normalization followed by log1p transform.
+
+    For each cell c:
+        x'_cg = log(1 + x_cg / sum_g x_cg * target_sum)
+    """
     library_size = matrix.sum(axis=1, keepdims=True)
     normalized = matrix / np.maximum(library_size, 1.0) * target_sum
     return np.log1p(normalized)
@@ -182,16 +190,17 @@ def read_10x_mtx_subset(
     barcodes_path: str | Path,
     selected_cells: list[str] | np.ndarray,
 ) -> CountMatrix:
+    """Load only a selected subset of cells from 10x mtx/features/barcodes files."""
     selected_list = [str(cell) for cell in selected_cells]
     selected_set = set(selected_list)
+    selected_pos = {barcode: idx for idx, barcode in enumerate(selected_list)}
 
     with gzip.open(barcodes_path, "rt") as handle:
         all_barcodes = [line.rstrip("\n").split("\t")[0] for line in handle]
     selected_columns = {
-        col_idx + 1: out_idx
+        col_idx + 1: selected_pos[barcode]
         for col_idx, barcode in enumerate(all_barcodes)
         if barcode in selected_set
-        for out_idx in [selected_list.index(barcode)]
     }
     selected_barcodes = np.array(selected_list, dtype=object)
 
@@ -220,3 +229,68 @@ def read_10x_mtx_subset(
             matrix[out_idx, gene_idx] = float(value_str)
 
     return CountMatrix(matrix=matrix, gene_names=np.array(gene_names, dtype=object), cell_barcodes=selected_barcodes)
+
+
+def read_10x_mtx_gene_cell_subset(
+    matrix_path: str | Path,
+    features_path: str | Path,
+    barcodes_path: str | Path,
+    selected_cells: list[str] | np.ndarray,
+    selected_genes: list[str] | np.ndarray,
+) -> CountMatrix:
+    """Load only selected cells and selected genes from a 10x matrix bundle.
+
+    This is a lighter-weight alternative to `read_10x_mtx_subset` when the
+    downstream analysis only needs a fixed signature library instead of the
+    full transcriptome.
+    """
+    selected_cell_list = [str(cell) for cell in selected_cells]
+    selected_cell_set = set(selected_cell_list)
+    selected_cell_pos = {barcode: idx for idx, barcode in enumerate(selected_cell_list)}
+
+    wanted_gene_upper = {str(gene).upper() for gene in selected_genes}
+
+    with gzip.open(barcodes_path, "rt") as handle:
+        all_barcodes = [line.rstrip("\n").split("\t")[0] for line in handle]
+    selected_columns = {
+        col_idx + 1: selected_cell_pos[barcode]
+        for col_idx, barcode in enumerate(all_barcodes)
+        if barcode in selected_cell_set
+    }
+
+    selected_row_map: dict[int, int] = {}
+    kept_gene_names: list[str] = []
+    seen_gene_upper: set[str] = set()
+    with gzip.open(features_path, "rt") as handle:
+        for gene_idx, line in enumerate(handle, start=1):
+            parts = line.rstrip("\n").split("\t")
+            gene_name = parts[1] if len(parts) > 1 else parts[0]
+            gene_upper = gene_name.upper()
+            if gene_upper not in wanted_gene_upper or gene_upper in seen_gene_upper:
+                continue
+            selected_row_map[gene_idx] = len(kept_gene_names)
+            kept_gene_names.append(gene_name)
+            seen_gene_upper.add(gene_upper)
+
+    matrix = np.zeros((len(selected_cell_list), len(kept_gene_names)), dtype=np.float32)
+    with gzip.open(matrix_path, "rt") as handle:
+        shape_seen = False
+        for raw in handle:
+            line = raw.strip()
+            if not line or line.startswith("%"):
+                continue
+            if not shape_seen:
+                shape_seen = True
+                continue
+            row_str, col_str, value_str = line.split()
+            out_col = selected_columns.get(int(col_str))
+            out_row = selected_row_map.get(int(row_str))
+            if out_col is None or out_row is None:
+                continue
+            matrix[out_col, out_row] = float(value_str)
+
+    return CountMatrix(
+        matrix=matrix,
+        gene_names=np.array(kept_gene_names, dtype=object),
+        cell_barcodes=np.array(selected_cell_list, dtype=object),
+    )

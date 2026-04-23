@@ -6,12 +6,14 @@ import numpy as np
 
 
 def velocity_r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Compute R^2 for predicted module velocities."""
     residual = np.sum((y_true - y_pred) ** 2)
     total = np.sum((y_true - y_true.mean(axis=0, keepdims=True)) ** 2)
     return float(1.0 - residual / total) if total > 0 else 0.0
 
 
 def velocity_sign_agreement(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Fraction of entries where predicted and observed velocity signs agree."""
     return float(np.mean(np.sign(y_pred) == np.sign(y_true)))
 
 
@@ -66,6 +68,20 @@ def fit_population_dynamics(
     genetics: np.ndarray | None = None,
     alpha: float = 0.05,
 ) -> SparseDynamicsModel:
+    """Fit a ridge-regularized coarse-grained dynamics model.
+
+    Design matrix:
+        X = [module_activity, state_embedding, external_input, genetics]
+
+    Target:
+        Y = module_velocity  ~=  dM/dt
+
+    Closed-form ridge estimate after centering:
+        W = (X^T X + alpha I)^(-1) X^T Y
+
+    The returned coefficients quantify how current state/module/input values
+    explain the estimated local module change rate.
+    """
     if module_activity.shape != module_velocity.shape:
         raise ValueError("module_activity and module_velocity must have the same shape")
 

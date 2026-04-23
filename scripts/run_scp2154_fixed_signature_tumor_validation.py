@@ -132,6 +132,14 @@ def signature_scores(
     gene_names: np.ndarray,
     signatures: dict[str, list[str]],
 ) -> tuple[dict[str, np.ndarray], dict[str, list[str]]]:
+    """Score fixed signatures by mean gene-wise z-score.
+
+    For a signature S and cell i:
+
+        score_i(S) = mean_{g in S intersect genes} z_ig
+
+    where z_ig is the per-gene standardized expression across sampled cells.
+    """
     upper_to_index = {str(gene).upper(): idx for idx, gene in enumerate(gene_names)}
     mean = matrix.mean(axis=0, keepdims=True)
     std = np.maximum(matrix.std(axis=0, keepdims=True), 1e-6)
@@ -232,6 +240,16 @@ def ridge_fit_predict(
 
 
 def loo_prediction_test(x: np.ndarray, y: np.ndarray, alpha: float) -> dict:
+    """Leave-one-donor-out ridge evaluation for one predictor/one target.
+
+    Reported quantities:
+    - loo_r2: held-out R^2 of the ridge model
+    - loo_baseline_r2: held-out R^2 of a donor-mean baseline
+    - loo_delta_r2 = loo_r2 - loo_baseline_r2
+
+    Positive loo_delta_r2 means the predictor explains target variation beyond
+    a constant baseline.
+    """
     pred = np.zeros_like(y, dtype=float)
     baseline_pred = np.zeros_like(y, dtype=float)
     coeffs = np.zeros_like(y, dtype=float)
@@ -266,6 +284,7 @@ def safe_corr(x: np.ndarray, y: np.ndarray) -> float:
 
 
 def empirical_p_value(observed: float, null_values: np.ndarray) -> float:
+    """One-sided permutation p-value using the null distribution of delta R^2."""
     return float((1 + np.sum(null_values >= observed)) / (len(null_values) + 1))
 
 
